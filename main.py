@@ -10,6 +10,7 @@ from datetime import datetime
 import json
 import time
 import os
+import psutil
 import apicalls
 
 with open('config.json') as f:
@@ -28,11 +29,34 @@ async def help(ctx):
     em = discord.Embed(title="Help", description="All the available help commands.", color=discord.Colour.blurple())
     em.add_field(name="Welcome Commands", value="`setwelcomechannel` , `delwelcomechannel` , `setleavechannel` , `delleavechannel` , `setwelcomemessage` , `delwelcomemessage` , `setleavemessage` , `delleavemessage` , `testwelcome` , `testleave`")
     em.add_field(name="Fun Commands", value="`joke` , `darkjoke` , `fact` , `roast <user>` , `question` , `quote` , `meme`", inline=False)
-    em.add_field(name="Util & Bot", value="`avatar` , `coinflip` , `userinfo` , `uptime` , `ping`")
+    em.add_field(name="Util & Bot", value="`avatar` , `coinflip` , `userinfo` , `uptime` , `ping` , `stats` , `servers`")
     em.add_field(name="Owner", value="`subreddit`", inline=False)
     await ctx.respond(embed=em)
 
 startup_time = datetime.now()
+
+@bot.slash_command()
+async def servers(ctx):
+    em = discord.Embed(title="Servers", description=f"I'm in {len(bot.guilds)} servers", color=discord.Colour.blurple())
+    await ctx.respond(embed=em)
+
+@bot.slash_command()
+async def stats(ctx):
+    cpu_percent = psutil.cpu_percent()
+    memory = psutil.virtual_memory()
+    ram_usage = memory.used / 1024 / 1024
+    ram_total = memory.total / 1024 / 1024
+    ram_percent = memory.percent
+    disk_usage = psutil.disk_usage('/')
+    total_space = disk_usage.total / (1024 ** 3)  # Convert bytes to gigabytes
+    used_space = disk_usage.used / (1024 ** 3)
+    percent_used = disk_usage.percent
+    em = discord.Embed(title="Nuko Stats", description="Check my statistics like Ram, Storage, CPU, Ping", colour=discord.Colour.blurple())
+    em.add_field(name="Latency", value=f"{bot.latency * 1000:.2f}ms", inline=False)
+    em.add_field(name="CPU Usage", value=f"{cpu_percent}%", inline=False)
+    em.add_field(name="RAM Usage", value=f"{ram_usage:.2f} MB / {ram_total:.2f} MB ({ram_percent}%)", inline=False)
+    em.add_field(name="Storage", value=f"{used_space:.2f} GB / {total_space:.2f} GB ({percent_used}%)", inline=False)
+    await ctx.respond(embed = em)
 
 @bot.slash_command(description="Show how long the bot has been running since it was last started.")
 async def uptime(ctx):
