@@ -13,4 +13,4 @@ Prefix: n!
 
 You can host Nuko on your server by just cloning the repo and replacing the Bot token and MongoDB database url with your own url and token.
 
-Requirements: py-cord Version 2.4.1, psutil, pymongo 
+#### Requirements: py-cord Version 2.4.1, psutil, pymongo 
