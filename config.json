@@ -1,0 +1,5 @@
+{
+    "prefix" : "n!",
+    "token" : "YOUR BOT TOKEN HERE",
+    "mongodb" : "MongoDB Database URL"
+}
