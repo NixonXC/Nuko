@@ -7,8 +7,8 @@ to create a welcoming environment for new members. Nuko also has fun commands li
 
 Prefix: n!
 
-###TOP.GG URL : https://top.gg/bot/1084050050495287356
+### TOP.GG URL : https://top.gg/bot/1084050050495287356
 
-##How to host Nuko yourself
+## How to host Nuko yourself
 
 You can host Nuko on your server by just cloning the repo and replacing the Bot token and MongoDB database url with your own url and token.
