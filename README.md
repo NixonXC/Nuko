@@ -1,4 +1,4 @@
-# Nuko
+# Nuko 🐱‍👤
 Welcome Bot with Fun and Util commands
 
 Nuko is a Discord bot that offers a Welcome System for free. Our focus is on simplicity and user-friendliness to make Nuko accessible
