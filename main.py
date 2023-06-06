@@ -29,11 +29,19 @@ async def help(ctx):
     em = discord.Embed(title="Help", description="All the available help commands.", color=discord.Colour.blurple())
     em.add_field(name="Welcome Commands", value="`setwelcomechannel` , `delwelcomechannel` , `setleavechannel` , `delleavechannel` , `setwelcomemessage` , `delwelcomemessage` , `setleavemessage` , `delleavemessage` , `testwelcome` , `testleave`")
     em.add_field(name="Fun Commands", value="`joke` , `darkjoke` , `fact` , `roast <user>` , `question` , `quote` , `meme`", inline=False)
-    em.add_field(name="Util & Bot", value="`avatar` , `coinflip` , `userinfo` , `uptime` , `ping` , `stats` , `servers`")
+    em.add_field(name="Util & Bot", value="`avatar` , `coinflip` , `userinfo` , `uptime` , `ping` , `stats` , `servers` , `tutorial`")
     em.add_field(name="Owner", value="`subreddit`", inline=False)
     await ctx.respond(embed=em)
 
 startup_time = datetime.now()
+
+@bot.slash_command()
+async def tutorial(ctx):
+    em = discord.Embed(title="How to setup Welcome/leave commands:", color=discord.Colour.nitro_pink())
+    em.add_field(name="Step 1. Set the Welcome/Leave Channel", value="You can setup the welcome/leave logging system by using the commands: `/setwelcomechannel` or `/setleavechannel`, there is one required parameter in the command which is `channel`, you will have to select the channel where you want the Welcome and leave logs to be displayed.", inline=False)
+    em.add_field(name="Step 2. Set the Welcome/Leave Message", value="You can setup the welcome/leave message by using the commands: `/setwelcomemessage` or `setleavemessage`, there are four required parameters in the commands which are `embed_title`, `message` , `embed_image` , `embed_color`, you will have to full out the parameters with your desired options, If you want the embed_image to be `none` or nothing you can insert any random URL that does not contain an image like `https://google.com/`, and if you want to access the user like mentioning them or getting their username and discriminator then you can use the `{user}` module which allows you to mention or get the name and discriminator of the new member like `{user.mention}` will mention the newly joined member.", inline=False)
+    em.add_field(name="That's It!", value="And that's it, if you need any help regarding the welcome system or any other commands then you can join the support server for more information", inline=False)
+    await ctx.respond(embed = em)
 
 @bot.slash_command()
 async def servers(ctx):
