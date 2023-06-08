@@ -40,6 +40,7 @@ async def tutorial(ctx):
     em = discord.Embed(title="How to setup Welcome/leave commands:", color=discord.Colour.nitro_pink())
     em.add_field(name="Step 1. Set the Welcome/Leave Channel", value="You can setup the welcome/leave logging system by using the commands: `/setwelcomechannel` or `/setleavechannel`, there is one required parameter in the command which is `channel`, you will have to select the channel where you want the Welcome and leave logs to be displayed.", inline=False)
     em.add_field(name="Step 2. Set the Welcome/Leave Message", value="You can setup the welcome/leave message by using the commands: `/setwelcomemessage` or `setleavemessage`, there are four required parameters in the commands which are `embed_title`, `message` , `embed_image` , `embed_color`, you will have to full out the parameters with your desired options, If you want the embed_image to be `none` or nothing you can insert any random URL that does not contain an image like `https://google.com/`, and if you want to access the user like mentioning them or getting their username and discriminator then you can use the `{user}` module which allows you to mention or get the name and discriminator of the new member like `{user.mention}` will mention the newly joined member.", inline=False)
+    em.add_field(name="Mention Member in Join message", value="The new `mention_newmember` parameter allows you to mention the new member in the welcome message or the leave message.")
     em.add_field(name="That's It!", value="And that's it, if you need any help regarding the welcome system or any other commands then you can join the support server for more information", inline=False)
     await ctx.respond(embed = em)
 
@@ -103,7 +104,12 @@ async def on_member_join(member):
         color = getattr(discord.Colour, query2["embed_color"])()
         em = discord.Embed(title=query2["embed_title"], description=toSend, color=color)
         em.set_image(url=query2["embed_image"])
-        return await channel.send(embed=em)
+        if query2["mention_newmember"] == "true":
+            await channel.send(member.mention)
+            return await channel.send(embed=em)
+        else:
+            return await channel.send(embed=em)
+
 
 @bot.event
 async def on_member_remove(member):
@@ -121,7 +127,11 @@ async def on_member_remove(member):
         color = getattr(discord.Colour, query2["embed_color"])()
         em = discord.Embed(title=query2["embed_title"], description=toSend, color=color)
         em.set_image(url=query2["embed_image"])
-        return await channel.send(embed=em)
+        if query2["mention_newmember"] == "true":
+            await channel.send(member.mention)
+            return await channel.send(embed=em)
+        else:
+            return await channel.send(embed=em)
 
 @bot.event
 async def on_application_command_error(ctx, error):

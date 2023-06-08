@@ -36,8 +36,13 @@ class Welcome(commands.Cog):
         em.set_image(url=query2["embed_image"])
 
         try:
-            await channel.send(embed=em)
-            await ctx.respond(f"Sent Test Leave/Goodbye message in {channel}.")
+            if query2["mention_newmember"] == "true":
+                await channel.send("<@1084050050495287356>")
+                await channel.send(embed=em)
+                await ctx.respond(f"Sent Test Leave/Goodbye message in {channel}.")
+            else:
+                await channel.send(embed=em)
+                await ctx.respond(f"Sent Test Leave/Goodbye message in {channel}.")
         except discord.Forbidden:
             await ctx.respond("I don't have permission to send messages in the leave channel.")
         except discord.HTTPException:
@@ -66,8 +71,13 @@ class Welcome(commands.Cog):
         em.set_image(url=query2["embed_image"])
 
         try:
-            await channel.send(embed=em)
-            await ctx.respond(f"Sent Test Welcome/Greet message in {channel}.")
+            if query2["mention_newmember"] == "true":
+                await channel.send("<@1084050050495287356>")
+                await channel.send(embed=em)
+                await ctx.respond(f"Sent Test Leave/Goodbye message in {channel}.")
+            else:
+                await channel.send(embed=em)
+                await ctx.respond(f"Sent Test Leave/Goodbye message in {channel}.")
         except discord.Forbidden:
             await ctx.respond("I don't have permission to send messages in the welcome channel.")
         except discord.HTTPException:
@@ -115,7 +125,7 @@ class Welcome(commands.Cog):
     
     @discord.slash_command()
     @commands.has_permissions(manage_channels=True)
-    async def setleavemessage(self, ctx, embed_title: str, message: str, embed_image:str, embed_color: discord.Option(str, choices=['blue', 'blurple', 'red' , 'green' , 'yellow' , 'nitro_pink' , 'gold'])):
+    async def setleavemessage(self, ctx, embed_title: str, message: str, embed_image:str, embed_color: discord.Option(str, choices=['blue', 'blurple', 'red' , 'green' , 'yellow' , 'nitro_pink' , 'gold']), mention_newmember : discord.Option(str, choices=["true" , "false"])):
         """Set the Welcome Channel."""
         db = client["nuko"]
         collection = db["leaves"]
@@ -126,20 +136,23 @@ class Welcome(commands.Cog):
                 'embed_title' : embed_title,
                 'message' : message,
                 'embed_image' : embed_image,
-                'embed_color' : embed_color
+                'embed_color' : embed_color,
+                'mention_newmember' : mention_newmember
             }
             collection.insert_one(post)
-            return await ctx.respond(f"Successfully set Leave System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`")
+            return await ctx.respond(f"Successfully set Leave System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`\n**Mention Member:** `{mention_newmember}`")
         else:
             collection.update_many(
                 {'guild_id': ctx.guild.id},
                 {'$set': {'embed_title': embed_title,
                 'message': message,
                 'embed_image': embed_image,
-                'embed_color' : embed_color}},
+                'embed_color' : embed_color,
+                'mention_newmember' : mention_newmember
+                }},
                 upsert=True
             )
-            return await ctx.respond(f"Successfully Edited Leave System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`")
+            return await ctx.respond(f"Successfully Edited Leave System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`\n**Mention Member:** `{mention_newmember}`")
         
     @discord.slash_command()
     @commands.has_permissions(manage_channels=True)
@@ -190,7 +203,7 @@ class Welcome(commands.Cog):
 
     @discord.slash_command()
     @commands.has_permissions(manage_channels=True)
-    async def setwelcomemessage(self, ctx, embed_title: str, message: str, embed_image:str, embed_color: discord.Option(str, choices=['blue', 'blurple', 'red' , 'green' , 'yellow' , 'nitro_pink' , 'gold'])):
+    async def setwelcomemessage(self, ctx, embed_title: str, message: str, embed_image:str, embed_color: discord.Option(str, choices=['blue', 'blurple', 'red' , 'green' , 'yellow' , 'nitro_pink' , 'gold']), mention_newmember : discord.Option(str, choices=["true" , "false"])):
         """Set the Welcome Channel."""
         db = client["nuko"]
         collection = db["messages"]
@@ -201,20 +214,23 @@ class Welcome(commands.Cog):
                 'embed_title' : embed_title,
                 'message' : message,
                 'embed_image' : embed_image,
-                'embed_color' : embed_color
+                'embed_color' : embed_color,
+                'mention_newmember' : mention_newmember
             }
             collection.insert_one(post)
-            return await ctx.respond(f"Successfully set Welcome System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`")
+            return await ctx.respond(f"Successfully set Welcome System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`\n**Mention New Member:** `{mention_newmember}`")
         else:
             collection.update_many(
                 {'guild_id': ctx.guild.id},
                 {'$set': {'embed_title': embed_title,
                 'message': message,
                 'embed_image': embed_image,
-                'embed_color' : embed_color}},
+                'embed_color' : embed_color,
+                'mention_newmember' : mention_newmember
+                }},
                 upsert=True
             )
-            return await ctx.respond(f"Successfully Edited Welcome System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`")
+            return await ctx.respond(f"Successfully Edited Welcome System To: \n**Embed Title:** `{embed_title}`\n**Embed Description/Message:** `{message}`\n**Embed Image(URL):** `{embed_image}`\n**Embed Color:** `{embed_color}`\n**Mention New Member:** `{mention_newmember}`")
         
     @discord.slash_command()
     @commands.has_permissions(manage_channels=True)
