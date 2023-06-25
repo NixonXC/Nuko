@@ -18,7 +18,7 @@ class Fun(commands.Cog):
     @discord.slash_command()
     async def joke(self, ctx):
         result = await apicalls.fetch_joke()
-        await ctx.respond(result["setup"] + "? " + result["punchline"])
+        await ctx.respond(result["buildup"] + "? " + result["punchline"])
 
     @discord.slash_command(description="Returns a random fun fact!")
     async def fact(self, ctx):
@@ -34,7 +34,7 @@ class Fun(commands.Cog):
     async def darkjoke(self, ctx):
         if ctx.channel.is_nsfw():
             result = await apicalls.fetch_darkjoke()
-            await ctx.respond(result["setup"] + "? " + result["punchline"])
+            await ctx.respond(result["buildup"] + "? " + result["punchline"])
         else:
             await ctx.respond("Sorry, this command is only for NSFW channels.")
 
@@ -59,7 +59,6 @@ class Fun(commands.Cog):
                 em.set_image(url=response["url"])
                 em.set_footer(text=f"{response['ups']} Upvotes      ●      r/{response['subreddit']}")
                 await ctx.respond(embed=em)
-
 
 def setup(bot):
     bot.add_cog(Fun(bot))

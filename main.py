@@ -10,8 +10,12 @@ from datetime import datetime
 import json
 import time
 import os
+import requests
 import psutil
 import apicalls
+
+from PIL import Image, ImageDraw, ImageOps, ImageFont
+from io import BytesIO
 
 with open('config.json') as f:
     data = json.load(f)
@@ -27,22 +31,13 @@ bot = commands.Bot(command_prefix=data["prefix"], intents=intents)
 @bot.slash_command()
 async def help(ctx):
     em = discord.Embed(title="Help", description="All the available help commands.", color=discord.Colour.blurple())
-    em.add_field(name="Welcome Commands", value="`setwelcomechannel` , `delwelcomechannel` , `setleavechannel` , `delleavechannel` , `setwelcomemessage` , `delwelcomemessage` , `setleavemessage` , `delleavemessage` , `testwelcome` , `testleave`")
+    em.add_field(name="Welcome Commands", value="`setwelcomechannel` , `delwelcomechannel` , `setleavechannel` , `delleavechannel` , `setwelcomemessage` , `delwelcomemessage` , `setleavemessage` , `delleavemessage`")
     em.add_field(name="Fun Commands", value="`joke` , `darkjoke` , `fact` , `roast <user>` , `question` , `quote` , `meme`", inline=False)
-    em.add_field(name="Util & Bot", value="`avatar` , `coinflip` , `userinfo` , `uptime` , `ping` , `stats` , `servers` , `tutorial`")
+    em.add_field(name="Util & Bot", value="`avatar` , `coinflip` , `userinfo` , `uptime` , `ping` , `stats` , `servers`")
     em.add_field(name="Owner", value="`subreddit`", inline=False)
     await ctx.respond(embed=em)
 
 startup_time = datetime.now()
-
-@bot.slash_command()
-async def tutorial(ctx):
-    em = discord.Embed(title="How to setup Welcome/leave commands:", color=discord.Colour.nitro_pink())
-    em.add_field(name="Step 1. Set the Welcome/Leave Channel", value="You can setup the welcome/leave logging system by using the commands: `/setwelcomechannel` or `/setleavechannel`, there is one required parameter in the command which is `channel`, you will have to select the channel where you want the Welcome and leave logs to be displayed.", inline=False)
-    em.add_field(name="Step 2. Set the Welcome/Leave Message", value="You can setup the welcome/leave message by using the commands: `/setwelcomemessage` or `setleavemessage`, there are four required parameters in the commands which are `embed_title`, `message` , `embed_image` , `embed_color`, you will have to full out the parameters with your desired options, If you want the embed_image to be `none` or nothing you can insert any random URL that does not contain an image like `https://google.com/`, and if you want to access the user like mentioning them or getting their username and discriminator then you can use the `{user}` module which allows you to mention or get the name and discriminator of the new member like `{user.mention}` will mention the newly joined member.", inline=False)
-    em.add_field(name="Mention Member in Join message", value="The new `mention_newmember` parameter allows you to mention the new member in the welcome message or the leave message.")
-    em.add_field(name="That's It!", value="And that's it, if you need any help regarding the welcome system or any other commands then you can join the support server for more information", inline=False)
-    await ctx.respond(embed = em)
 
 @bot.slash_command()
 async def servers(ctx):
@@ -95,21 +90,68 @@ async def on_member_join(member):
     messages = db["messages"]
     query = channels.find_one({"guild_id": member.guild.id})
     query2 = messages.find_one({"guild_id": member.guild.id})
-    if not query and query2:
+    
+    if not query or not query2:
         return
-    else:
-        channel = bot.get_channel(query["channel_id"])
-        toSend = query2["message"].replace("{user}", f"{member.name}#{member.discriminator}")
-        toSend = toSend.replace("{user.mention}", member.mention)
-        color = getattr(discord.Colour, query2["embed_color"])()
-        em = discord.Embed(title=query2["embed_title"], description=toSend, color=color)
-        em.set_image(url=query2["embed_image"])
-        if query2["mention_newmember"] == "true":
-            await channel.send(member.mention)
-            return await channel.send(embed=em)
-        else:
-            return await channel.send(embed=em)
+    
+    channel = bot.get_channel(query["channel_id"])
+    url = query2["image_url"]
+    background_response = requests.get(url)
+    background_response.raise_for_status()
+    background_data = BytesIO(background_response.content)
+    img = Image.open(background_data)
+    fontXL = ImageFont.truetype("fonts/robotom.ttf", 75)
+    fontX = ImageFont.truetype("fonts/popregular.ttf", 37)
+    fontXC = ImageFont.truetype("fonts/mid.ttf", 40)
+    
+    if img.size != (1500, 500):
+        img = img.resize((1500, 500))
+    
+    uavatar = member.avatar
+    data = BytesIO(await uavatar.read())
+    pfp = Image.open(data).convert("RGBA")
+    pfp = pfp.resize((367, 375))
 
+    mask = Image.new("L", pfp.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, pfp.width, pfp.height), fill=255)
+
+    rounded_pfp = ImageOps.fit(pfp, mask.size)
+    rounded_pfp.putalpha(mask)
+
+    bordered_pfp = ImageOps.expand(rounded_pfp)
+
+    img.paste(bordered_pfp, (143, 60), mask=bordered_pfp)
+
+    welcome = query2["image_title"]
+    username = "@" + str(member)
+    userid = "Creation Date: " + member.created_at.strftime("%d %B, %Y | %H:%M")
+    message = query2["message"]
+    message = message.replace("{user.name}", f"{member.name}")
+    message = message.replace("{user}", f"{member}")
+    message = message.replace("{user.mention}", f"{member.name}")
+    print(message)
+
+    if len(message) > 40:
+        message_lines = [message[i:i + 40] for i in range(0, len(message), 40)]
+        message = "\n".join(message_lines)
+
+    draw = ImageDraw.Draw(img)
+    draw.text((820, 55), f"{welcome}", (20, 17, 20), font=fontXL)
+    draw.text((610, 170), username, (20, 17, 20), font=fontXC)
+    draw.text((610, 235), userid, (20, 17, 20), font=fontX)
+    draw.text((610, 290), message, (20, 17, 20), font=fontX)
+
+    profile_path = "rounded_profile.png"
+    img.save(profile_path)
+
+    with open(profile_path, "rb") as f:
+        profile_image = discord.File(f, filename=profile_path)
+    
+    if query2["mention_user"] == "true":
+        await channel.send(f"{member.mention}", file=profile_image)
+    else:
+        await channel.send(file=profile_image)
 
 @bot.event
 async def on_member_remove(member):
@@ -118,20 +160,67 @@ async def on_member_remove(member):
     messages = db["leaves"]
     query = channels.find_one({"guild_id": member.guild.id})
     query2 = messages.find_one({"guild_id": member.guild.id})
-    if not query and query2:
+    
+    if not query or not query2:
         return
+    channel = bot.get_channel(query["channel_id"])
+    url = query2["image_url"]
+    background_response = requests.get(url)
+    background_response.raise_for_status()
+    background_data = BytesIO(background_response.content)
+    img = Image.open(background_data)
+    fontXL = ImageFont.truetype("fonts/robotom.ttf", 75)
+    fontX = ImageFont.truetype("fonts/popregular.ttf", 37)
+    fontXC = ImageFont.truetype("fonts/mid.ttf", 40)
+    
+    if img.size != (1500, 500):
+        img = img.resize((1500, 500))
+    
+    uavatar = member.avatar
+    data = BytesIO(await uavatar.read())
+    pfp = Image.open(data).convert("RGBA")
+    pfp = pfp.resize((367, 375))
+
+    mask = Image.new("L", pfp.size, 0)
+    draw = ImageDraw.Draw(mask)
+    draw.ellipse((0, 0, pfp.width, pfp.height), fill=255)
+
+    rounded_pfp = ImageOps.fit(pfp, mask.size)
+    rounded_pfp.putalpha(mask)
+
+    bordered_pfp = ImageOps.expand(rounded_pfp)
+
+    img.paste(bordered_pfp, (143, 60), mask=bordered_pfp)
+
+    title = query2["image_title"]
+    username = "@" + str(member)
+    userid = "Creation Date: " + member.created_at.strftime("%d %B, %Y | %H:%M")
+    message = query2["message"]
+    message = message.replace("{user}", f"{member}")
+    message = message.replace("{user.mention}", f"{member.name}")
+    message = message.replace("{user.name}", f"{member.name}")
+    print(message)
+
+    if len(message) > 40:
+        message_lines = [message[i:i + 40] for i in range(0, len(message), 40)]
+        message = "\n".join(message_lines)
+
+    draw = ImageDraw.Draw(img)
+    draw.text((820, 55), f"{title}", (20, 17, 20), font=fontXL)
+    draw.text((610, 170), username, (20, 17, 20), font=fontXC)
+    draw.text((610, 235), userid, (20, 17, 20), font=fontX)
+    draw.text((610, 290), message, (20, 17, 20), font=fontX)
+
+    profile_path = "deltapath.png"
+    img.save(profile_path)
+
+    with open(profile_path, "rb") as f:
+        profile_image = discord.File(f, filename=profile_path)
+    
+    if query2["mention_user"] == "true":
+        await channel.send(f"{member.mention}", file=profile_image)
     else:
-        channel = bot.get_channel(query["channel_id"])
-        toSend = query2["message"].replace("{user}", f"{member.name}#{member.discriminator}")
-        toSend = toSend.replace("{user.mention}", member.mention)
-        color = getattr(discord.Colour, query2["embed_color"])()
-        em = discord.Embed(title=query2["embed_title"], description=toSend, color=color)
-        em.set_image(url=query2["embed_image"])
-        if query2["mention_newmember"] == "true":
-            await channel.send(member.mention)
-            return await channel.send(embed=em)
-        else:
-            return await channel.send(embed=em)
+        await channel.send(file=profile_image)
 
 @bot.event
 async def on_application_command_error(ctx, error):
@@ -158,8 +247,26 @@ async def change_status():
             await bot.change_presence(activity=status)
             await asyncio.sleep(50)
 
+async def update():
+    inp = input("Do you want to announce any updates? Type 'Yes' to confirm:\n")
+    if inp == "Yes":
+        channel = input("Select Channel:\n1. [📢] announcement\n2. [🤖] bot-updates\n")
+        if channel == "1":
+            content = input("Write the Announcement Content:\n")
+            channel = bot.get_channel(1109754654331519029)
+            await channel.send(content)
+        elif channel == "2":
+            content = input("Write the Bot Update Content:\n")
+            channel = bot.get_channel(1119700162013577294)
+            await channel.send(content)
+        else:
+            print("Please select a valid channel")
+    else:
+        return
+    
 @bot.event
 async def on_ready():
+    await update()
     print("Hello World, Nuko is alive!")
     bot.loop.create_task(change_status())
 
